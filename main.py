@@ -1,11 +1,14 @@
 from clients import (
+    Client,
     add_client,
     filter_clients_by_status,
     find_client,
+    find_client_by_id,
     sort_clients,
     update_status,
 )
 from meetings import (
+    Meeting,
     cancel_meeting,
     create_meeting,
     get_meeting_status,
@@ -23,31 +26,23 @@ CLIENTS_FILE = "data/clients.json"
 MEETINGS_FILE = "data/meetings.json"
 
 
-def show_clients(clients: list[dict]) -> None:
+def show_clients(clients: list[Client]) -> None:
     if not clients:
         print("Список клиентов пуст")
         return
     print("\n--- КЛИЕНТЫ ---")
     for c in clients:
-        print(
-            f"ID: {c['id']}, Имя: {c['name']}, "
-            f"Контакт: {c['contact']}, Статус: {c['status']}"
-        )
+        print(c)
     print("---------------\n")
 
 
-def show_meetings(meetings: list[dict], clients: list[dict]) -> None:
+def show_meetings(meetings: list[Meeting]) -> None:
     if not meetings:
         print("Список встреч пуст")
         return
-    names = {c["id"]: c["name"] for c in clients}
     print("\n--- ВСТРЕЧИ ---")
     for m in meetings:
-        client_name = names.get(m["client_id"], "Неизвестный клиент")
-        print(
-            f"ID: {m['id']}, Клиент: {client_name}, "
-            f"Дата: {m['meeting_date']}, Тема: {m['topic']}"
-        )
+        print(m)
     print("---------------\n")
 
 
@@ -66,9 +61,29 @@ def print_menu() -> None:
     print(" 0. Выход")
 
 
+def create_new_meeting(
+    meetings: list[Meeting],
+    clients: list[Client],
+) -> None:
+    client_id = input_int("ID клиента: ")
+    client = find_client_by_id(clients, client_id)
+    if client is None:
+        print(f"Клиент с ID {client_id} не найден")
+        return
+
+    meeting_date = input_date("Дата встречи (ДД.ММ.ГГГГ): ")
+    topic = input_nonempty("Тема встречи: ")
+    try:
+        meeting = create_meeting(meetings, client, meeting_date, topic)
+        print(f"Встреча назначена (ID: {meeting.id})")
+        save_meetings(MEETINGS_FILE, meetings)
+    except ValueError as exc:
+        print(f"Ошибка: {exc}")
+
+
 def main() -> None:
     clients = load_clients(CLIENTS_FILE)
-    meetings = load_meetings(MEETINGS_FILE)
+    meetings = load_meetings(MEETINGS_FILE, clients)
 
     while True:
         print_menu()
@@ -82,10 +97,7 @@ def main() -> None:
             contact = input_nonempty("Контакт: ")
             try:
                 client = add_client(clients, name, contact)
-                print(
-                    f"Клиент '{client['name']}' добавлен "
-                    f"(ID: {client['id']})"
-                )
+                print(f"Клиент '{client.name}' добавлен (ID: {client.id})")
                 save_clients(CLIENTS_FILE, clients)
             except ValueError as exc:
                 print(f"Ошибка: {exc}")
@@ -95,11 +107,7 @@ def main() -> None:
             found = find_client(clients, query)
             if found:
                 for c in found:
-                    print(
-                        f"Найден: ID {c['id']}, Имя: {c['name']}, "
-                        f"Контакт: {c['contact']}, "
-                        f"Статус: {c['status']}"
-                    )
+                    print(f"Найден: {c}")
             else:
                 print(f"Клиент '{query}' не найден")
 
@@ -120,26 +128,20 @@ def main() -> None:
             show_clients(sort_clients(clients, by="name"))
 
         elif choice == "7":
-            show_meetings(meetings, clients)
+            show_meetings(meetings)
 
         elif choice == "8":
             client_id = input_int("ID клиента: ")
-            meeting_date = input_date("Дата (ДД.ММ.ГГГГ): ")
-            available = is_slot_available(meetings, client_id, meeting_date)
-            print(get_meeting_status(available))
+            client = find_client_by_id(clients, client_id)
+            if client is None:
+                print(f"Клиент с ID {client_id} не найден")
+            else:
+                meeting_date = input_date("Дата (ДД.ММ.ГГГГ): ")
+                available = is_slot_available(meetings, client, meeting_date)
+                print(get_meeting_status(available))
 
         elif choice == "9":
-            client_id = input_int("ID клиента: ")
-            meeting_date = input_date("Дата встречи (ДД.ММ.ГГГГ): ")
-            topic = input_nonempty("Тема встречи: ")
-            try:
-                meeting = create_meeting(
-                    meetings, client_id, meeting_date, topic
-                )
-                print(f"Встреча назначена (ID: {meeting['id']})")
-                save_meetings(MEETINGS_FILE, meetings)
-            except ValueError as exc:
-                print(f"Ошибка: {exc}")
+            create_new_meeting(meetings, clients)
 
         elif choice == "10":
             meeting_id = input_int("ID встречи: ")
