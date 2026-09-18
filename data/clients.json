@@ -1,0 +1,23 @@
+[
+  {
+    "id": 1,
+    "name": "Иван Петров",
+    "contact": "+7-999-123-45-67",
+    "status": "В работе",
+    "created": "2026-09-15"
+  },
+  {
+    "id": 2,
+    "name": "Ооо Ромашка",
+    "contact": "info@romashka.ru",
+    "status": "В работе",
+    "created": "2026-09-15"
+  },
+  {
+    "id": 3,
+    "name": "Анна Смирнова",
+    "contact": "anna@email.com",
+    "status": "Завершено",
+    "created": "2026-09-15"
+  }
+]
