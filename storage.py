@@ -1,8 +1,11 @@
+"""Функции сохранения и загрузки данных проекта в JSON-файлах."""
 import json
 from pathlib import Path
 
 from clients import Client
-from meetings import Meeting
+from contacts import Contact
+from deals import Deal
+from managers import Manager
 
 
 def _load_raw(filename: str) -> list[dict]:
@@ -31,8 +34,7 @@ def _save_raw(filename: str, data: list[dict]) -> None:
 
 
 def load_clients(filename: str) -> list[Client]:
-    raw = _load_raw(filename)
-    return [Client.from_data(item) for item in raw]
+    return [Client.from_data(item) for item in _load_raw(filename)]
 
 
 def save_clients(filename: str, clients: list[Client]) -> None:
@@ -40,7 +42,6 @@ def save_clients(filename: str, clients: list[Client]) -> None:
         {
             "id": c.id,
             "name": c.name,
-            "contact": c.contact,
             "status": c.status,
             "created": c.created,
         }
@@ -49,41 +50,107 @@ def save_clients(filename: str, clients: list[Client]) -> None:
     _save_raw(filename, data)
 
 
-def load_meetings(filename: str, clients: list[Client]) -> list[Meeting]:
-    raw = _load_raw(filename)
-    meetings = []
-    for item in raw:
+def load_managers(filename: str) -> list[Manager]:
+    return [Manager.from_data(item) for item in _load_raw(filename)]
+
+
+def save_managers(filename: str, managers: list[Manager]) -> None:
+    data = [
+        {"id": m.id, "name": m.name, "email": m.email}
+        for m in managers
+    ]
+    _save_raw(filename, data)
+
+
+def load_contacts(filename: str, clients: list[Client]) -> list[Contact]:
+    contacts = []
+    for item in _load_raw(filename):
         client = next(
-            (c for c in clients if c.id == item["client_id"]),
-            None,
+            (c for c in clients if c.id == item["client_id"]), None
         )
         if client is None:
             print(
                 f"Клиент с ID {item['client_id']} не найден, "
-                f"встреча {item['id']} пропущена"
+                f"контакт {item['id']} пропущен"
             )
             continue
-        meetings.append(
-            Meeting(
-                meeting_id=item["id"],
+        contacts.append(
+            Contact(
+                contact_id=item["id"],
                 client=client,
-                meeting_date=item["meeting_date"],
-                topic=item.get("topic", ""),
-                is_cancelled=item.get("is_cancelled", False),
+                name=item["name"],
+                phone=item["phone"],
+                position=item.get("position", ""),
             )
         )
-    return meetings
+    return contacts
 
 
-def save_meetings(filename: str, meetings: list[Meeting]) -> None:
+def save_contacts(filename: str, contacts: list[Contact]) -> None:
     data = [
         {
-            "id": m.id,
-            "client_id": m.client.id,
-            "meeting_date": m.meeting_date,
-            "topic": m.topic,
-            "is_cancelled": m.is_cancelled,
+            "id": c.id,
+            "client_id": c.client.id,
+            "name": c.name,
+            "phone": c.phone,
+            "position": c.position,
         }
-        for m in meetings
+        for c in contacts
+    ]
+    _save_raw(filename, data)
+
+
+def load_deals(
+    filename: str,
+    clients: list[Client],
+    managers: list[Manager],
+    contacts: list[Contact],
+) -> list[Deal]:
+    deals = []
+    for item in _load_raw(filename):
+        client = next(
+            (c for c in clients if c.id == item["client_id"]), None
+        )
+        manager = next(
+            (m for m in managers if m.id == item["manager_id"]), None
+        )
+        if client is None or manager is None:
+            print(
+                f"Сделка {item['id']} пропущена: "
+                f"не найден клиент или менеджер"
+            )
+            continue
+        contact = None
+        contact_id = item.get("contact_id")
+        if contact_id is not None:
+            contact = next(
+                (c for c in contacts if c.id == contact_id), None
+            )
+        deals.append(
+            Deal(
+                deal_id=item["id"],
+                client=client,
+                manager=manager,
+                amount=item["amount"],
+                title=item.get("title", ""),
+                contact=contact,
+                stage=item.get("stage", "Открыта"),
+            )
+        )
+    return deals
+
+
+def save_deals(filename: str, deals: list[Deal]) -> None:
+    data = [
+        {
+            "id": d.id,
+            "client_id": d.client.id,
+            "manager_id": d.manager.id,
+            "contact_id": d.contact.id if d.contact else None,
+            "amount": d.amount,
+            "title": d.title,
+            "stage": d.stage,
+        }
+        for d in deals
     ]
     _save_raw(filename, data)

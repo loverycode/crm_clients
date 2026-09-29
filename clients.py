@@ -1,3 +1,4 @@
+"""Класс Client и функции для работы с коллекцией клиентов."""
 from datetime import date
 
 
@@ -7,69 +8,47 @@ class Client:
         self,
         client_id: int,
         name: str,
-        contact: str,
         status: str = "Новый",
         created: str | None = None,
     ) -> None:
         self.id = client_id
         self.name = name
-        self.contact = contact
         self.status = status
         self.created = created or str(date.today())
 
-    @staticmethod
-    def is_valid_contact(contact: str) -> bool:
-        return bool(contact.strip())
+    def update_status(self, new_status: str) -> None:
+        self.status = new_status
 
     @classmethod
     def from_data(cls, data: dict) -> "Client":
         return cls(
             client_id=data["id"],
             name=data["name"],
-            contact=data["contact"],
             status=data["status"],
             created=data.get("created"),
         )
 
-    def update_status(self, new_status: str) -> None:
-        self.status = new_status
-
     def __str__(self) -> str:
-        return (
-            f"ID: {self.id}, Имя: {self.name}, "
-            f"Контакт: {self.contact}, Статус: {self.status}"
-        )
+        return f"ID: {self.id}, Название: {self.name}, Статус: {self.status}"
 
 
 def add_client(
     clients: list[Client],
     name: str,
-    contact: str,
     status: str = "Новый",
 ) -> Client:
     if not name.strip():
-        raise ValueError("Имя клиента не может быть пустым")
-    if not Client.is_valid_contact(contact):
-        raise ValueError("Контакт клиента не может быть пустым")
+        raise ValueError("Название клиента не может быть пустым")
 
     next_id = max((c.id for c in clients), default=0) + 1
-    client = Client(
-        client_id=next_id,
-        name=name.strip().title(),
-        contact=contact.strip(),
-        status=status,
-    )
+    client = Client(client_id=next_id, name=name.strip(), status=status)
     clients.append(client)
     return client
 
 
 def find_client(clients: list[Client], query: str) -> list[Client]:
     query_lower = query.lower()
-    return [
-        c for c in clients
-        if query_lower in c.name.lower()
-        or query_lower in c.contact.lower()
-    ]
+    return [c for c in clients if query_lower in c.name.lower()]
 
 
 def find_client_by_id(

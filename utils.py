@@ -1,4 +1,4 @@
-from datetime import date, datetime
+"""Вспомогательные функции безопасного ввода данных."""
 
 
 def input_int(prompt: str) -> int:
@@ -10,13 +10,13 @@ def input_int(prompt: str) -> int:
             print("Ошибка: введите целое число")
 
 
-def input_date(prompt: str) -> date:
+def input_float(prompt: str) -> float:
     while True:
         raw = input(prompt)
         try:
-            return datetime.strptime(raw, "%d.%m.%Y").date()
+            return float(raw)
         except ValueError:
-            print("Ошибка: введите дату в формате ДД.ММ.ГГГГ")
+            print("Ошибка: введите число (например, 15000 или 15000.50)")
 
 
 def input_nonempty(prompt: str) -> str:
