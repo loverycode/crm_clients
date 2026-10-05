@@ -2,10 +2,10 @@
 import json
 from pathlib import Path
 
-from clients import Client
-from contacts import Contact
-from deals import Deal
-from managers import Manager
+from models.clients import Client
+from models.contacts import Contact
+from models.deals import Deal
+from models.managers import Manager
 
 
 def _load_raw(filename: str) -> list[dict]:

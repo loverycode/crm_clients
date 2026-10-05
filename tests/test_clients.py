@@ -1,5 +1,5 @@
 """Автоматизированные тесты класса Client и функций работы с ним."""
-from clients import (
+from models.clients import (
     Client,
     add_client,
     filter_clients_by_status,

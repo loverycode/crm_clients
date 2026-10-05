@@ -1,7 +1,7 @@
 """Класс Deal и функции для работы с коллекцией сделок."""
-from clients import Client
-from contacts import Contact
-from managers import Manager
+from models.clients import Client
+from models.contacts import Contact
+from models.managers import Manager
 
 OUTCOMES = ("Выиграна", "Проиграна", "Отменена")
 

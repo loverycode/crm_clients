@@ -1,6 +1,6 @@
 """Автоматизированные тесты класса Contact и функций работы с ним."""
-from clients import Client
-from contacts import add_contact, contacts_for_client, find_contact
+from models.clients import Client
+from models.contacts import add_contact, contacts_for_client, find_contact
 
 
 def test_contact_creation_linked_to_client():

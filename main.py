@@ -1,5 +1,5 @@
 """Точка запуска CRM-приложения: клиенты, менеджеры, контакты, сделки."""
-from clients import (
+from models.clients import (
     Client,
     add_client,
     filter_clients_by_status,
@@ -8,20 +8,20 @@ from clients import (
     sort_clients,
     update_status,
 )
-from contacts import (
+from models.contacts import (
     Contact,
     add_contact,
     contacts_for_client,
     find_contact,
 )
-from deals import (
+from models.deals import (
     Deal,
     close_deal,
     create_deal,
     filter_deals_by_stage,
     sort_deals_by_amount,
 )
-from managers import (
+from models.managers import (
     Manager,
     add_manager,
     find_manager,

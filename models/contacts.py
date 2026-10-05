@@ -1,5 +1,5 @@
 """Класс Contact и функции для работы с коллекцией контактов."""
-from clients import Client
+from models.clients import Client
 
 
 class Contact:

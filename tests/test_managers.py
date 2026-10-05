@@ -1,5 +1,5 @@
 """Автоматизированные тесты класса Manager и функций работы с ним."""
-from managers import Manager, add_manager, find_manager
+from models.managers import Manager, add_manager, find_manager
 
 
 def test_manager_creation():

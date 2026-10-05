@@ -4,7 +4,6 @@
 class Manager:
 
     def __init__(self, manager_id: int, name: str, email: str) -> None:
-        """Создать объект менеджера."""
         self.id = manager_id
         self.name = name
         self.email = email

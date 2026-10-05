@@ -1,6 +1,6 @@
 """Автоматизированные тесты класса Deal и функций работы с ним."""
-from clients import Client
-from deals import (
+from models.clients import Client
+from models.deals import (
     close_deal,
     create_deal,
     filter_deals_by_stage,
