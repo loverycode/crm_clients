@@ -1,0 +1,17 @@
+{% if deal.stage == "Открыта" %}
+    <span class="badge bg-primary deal-status deal-status-open">
+        {{ deal.stage }}
+    </span>
+{% elif deal.stage == "Выиграна" %}
+    <span class="badge bg-success deal-status deal-status-won">
+        {{ deal.stage }}
+    </span>
+{% elif deal.stage == "Проиграна" %}
+    <span class="badge bg-danger deal-status deal-status-lost">
+        {{ deal.stage }}
+    </span>
+{% else %}
+    <span class="badge bg-secondary deal-status deal-status-cancelled">
+        {{ deal.stage }}
+    </span>
+{% endif %}

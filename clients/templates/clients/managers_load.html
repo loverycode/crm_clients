@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Менеджеры с доступной нагрузкой – CRM
+{% endblock %}
+
+{% block content %}
+    <h1>Менеджеры с доступной нагрузкой</h1>
+    <p class="lead">
+        Менеджеры, у которых менее 5 открытых сделок.
+    </p>
+
+    {% if managers %}
+        <ul class="list-group">
+            {% for manager in managers %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <div>
+                        <strong>{{ manager.name }}</strong>
+                        <br>
+                        <small class="text-muted">{{ manager.email }}</small>
+                    </div>
+                    <span class="badge bg-success">
+                        Открытых сделок: {{ manager.open_count }}
+                    </span>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>Все менеджеры загружены (5 и более открытых сделок у каждого).</p>
+    {% endif %}
+
+    <a href="{% url 'deals:list' %}" class="btn btn-outline-secondary mt-3">
+        &larr; к списку сделок
+    </a>
+{% endblock %}

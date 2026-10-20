@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if client %}
+        {{ client.name }} – CRM
+    {% else %}
+        Клиент не найден – CRM
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% if client %}
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-title">
+                    {{ client.name }}
+                </h1>
+
+                <p class="card-text">
+                    <strong>ID:</strong> {{ client.id }}
+                </p>
+
+                <p class="card-text">
+                    <strong>Статус:</strong> {{ client.status }}
+                </p>
+
+                <p class="card-text">
+                    <strong>Клиент с:</strong> {{ client.created }}
+                </p>
+
+                <h2 class="h5 mt-4">Контакты</h2>
+                <ul class="list-group">
+                    {% for contact in contacts %}
+                        <li class="list-group-item">
+                            {{ contact.name }}{% if contact.position %}, {{ contact.position }}{% endif %}
+                            &mdash; {{ contact.phone }}
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item text-muted">
+                            Контактов пока нет.
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    {% else %}
+        <h1 class="text-danger">
+            Клиент не найден
+        </h1>
+
+        <p>
+            Клиент с указанным идентификатором отсутствует.
+        </p>
+    {% endif %}
+
+    <a
+        href="{% url 'clients:list' %}"
+        class="btn btn-outline-secondary mt-3"
+    >
+        &larr; к списку клиентов
+    </a>
+{% endblock %}

@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Главная - CRM
+{% endblock %}
+
+{% block content %}
+    <h1 class="display-4">CRM</h1>
+
+    <p class="lead">
+        Система учёта клиентов, менеджеров, контактов и сделок.
+    </p>
+
+    <p>
+        Система хранит сведения о клиентах компании, их контактных лицах
+        и сделках, которые ведут менеджеры.
+    </p>
+
+    <a href="{% url 'clients:list' %}" class="btn btn-primary me-2">
+        Клиенты
+    </a>
+    <a href="{% url 'deals:list' %}" class="btn btn-primary me-2">
+        Сделки
+    </a>
+{% endblock %}

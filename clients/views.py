@@ -1,72 +1,69 @@
-from django.http import HttpResponse
+from django.shortcuts import render
 
-from homepage.views import page
-from models.clients import find_client_by_id
-from models.contacts import contacts_for_client
-from storage import load_clients, load_contacts
+from db.database import get_connection
 
 
 def clients_list(request):
-    items = ""
-    for client in load_clients("data/clients.json"):
-        badge = "bg-success" if client.status == "В работе" else "bg-secondary"
-        items += f"""
-        <li class="list-group-item d-flex justify-content-between">
-            <a href="/clients/{client.id}/">{client.name}</a>
-            <span class="badge {badge}">{client.status}</span>
-        </li>
-        """
-    content = f"""
-    <h1>Клиенты</h1>
-    <ul class="list-group">{items}</ul>
-    """
-    return HttpResponse(page("CRM – клиенты", content))
+    conn = get_connection()
+    try:
+        clients = conn.execute(
+            "SELECT id, name, status, created FROM clients ORDER BY name"
+        ).fetchall()
+    finally:
+        conn.close()
+    return render(request, "clients/client_list.html", {"clients": clients})
 
 
 def client_detail(request, client_id):
-    clients_data = load_clients("data/clients.json")
-    client = find_client_by_id(clients_data, client_id)
+    conn = get_connection()
+    try:
+        client = conn.execute(
+            "SELECT id, name, status, created FROM clients WHERE id = ?",
+            (client_id,),
+        ).fetchone()
 
-    if client is None:
-        content = """
-        <h1 class="text-danger">Клиент не найден</h1>
-        <a href="/clients/" class="btn btn-outline-secondary">
-            &larr; к списку клиентов
-        </a>
-        """
-        return HttpResponse(page("Клиент не найден", content), status=404)
+        contacts = []
+        if client is not None:
+            contacts = conn.execute(
+                "SELECT id, name, phone, position "
+                "FROM contacts WHERE client_id = ? ORDER BY name",
+                (client_id,),
+            ).fetchall()
+    finally:
+        conn.close()
 
-    contacts_data = load_contacts("data/contacts.json", clients_data)
-    client_contacts = contacts_for_client(contacts_data, client)
+    context = {"client": client, "contacts": contacts}
+    return render(
+        request,
+        "clients/client_detail.html",
+        context,
+        status=404 if client is None else 200,
+    )
 
-    contacts_html = ""
-    for contact in client_contacts:
-        position = f", {contact.position}" if contact.position else ""
-        contacts_html += f"""
-        <li class="list-group-item">
-            {contact.name}{position} &mdash; {contact.phone}
-        </li>
-        """
-    if not contacts_html:
-        contacts_html = (
-            '<li class="list-group-item text-muted">Контактов пока нет</li>'
-        )
 
-    content = f"""
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title">{client.name}</h5>
-            <p class="card-text"><strong>ID:</strong> {client.id}</p>
-            <p class="card-text"><strong>Статус:</strong> {client.status}</p>
-            <p class="card-text">
-                <strong>Клиент с:</strong> {client.created}
-            </p>
-            <h6 class="mt-4">Контакты</h6>
-            <ul class="list-group mb-3">{contacts_html}</ul>
-            <a href="/clients/" class="btn btn-outline-secondary">
-                &larr; к списку клиентов
-            </a>
-        </div>
-    </div>
-    """
-    return HttpResponse(page(client.name, content), status=200)
+def managers_load(request):
+    conn = get_connection()
+    try:
+        managers = conn.execute(
+            """
+            SELECT
+                managers.id,
+                managers.name,
+                managers.email,
+                COUNT(deals.id) AS open_count
+            FROM managers
+            LEFT JOIN deals
+                ON managers.id = deals.manager_id
+                AND deals.stage = 'Открыта'
+            GROUP BY managers.id, managers.name, managers.email
+            HAVING COUNT(deals.id) < 5
+            ORDER BY open_count, managers.name
+            """
+        ).fetchall()
+    finally:
+        conn.close()
+    return render(
+        request,
+        "clients/managers_load.html",
+        {"managers": managers},
+    )

@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+
+{% block title %}
+    Статистика – CRM
+{% endblock %}
+
+{% block content %}
+    <h1>Статистика</h1>
+
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="h5">Всего сделок</h2>
+                    <p class="display-6">{{ total_count }}</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h2 class="h5">Общая сумма</h2>
+                    <p class="display-6">{{ total_amount|floatformat:0 }} ₽</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <h2 class="h4">Сделки по клиентам</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Клиент</th>
+                <th class="text-end">Сделок</th>
+                <th class="text-end">Сумма</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in by_client %}
+                <tr>
+                    <td>{{ row.client_name }}</td>
+                    <td class="text-end">{{ row.deals_count }}</td>
+                    <td class="text-end">{{ row.total_amount|floatformat:0 }} ₽</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="3">Данных нет.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <h2 class="h4 mt-4">Сделки по менеджерам</h2>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Менеджер</th>
+                <th class="text-end">Сделок</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in by_manager %}
+                <tr>
+                    <td>{{ row.manager_name }}</td>
+                    <td class="text-end">{{ row.deals_count }}</td>
+                </tr>
+            {% empty %}
+                <tr><td colspan="2">Данных нет.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}

@@ -7,7 +7,7 @@ from models.deals import (
     is_manager_available,
     sort_deals_by_amount,
 )
-from managers import Manager
+from models.managers import Manager
 
 
 def test_deal_creation():

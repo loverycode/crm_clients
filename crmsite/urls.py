@@ -23,3 +23,5 @@ urlpatterns = [
     path('clients/', include('clients.urls')),
     path('deals/', include('deals.urls')),
 ]
+
+handler404 = "homepage.views.page_not_found"

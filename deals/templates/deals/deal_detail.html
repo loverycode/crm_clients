@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if deal %}
+        Сделка № {{ deal.id }}
+    {% else %}
+        Сделка не найдена
+    {% endif %}
+{% endblock %}
+
+{% block content %}
+    {% if deal %}
+        <div class="card">
+            <div class="card-body">
+                <h1 class="card-title">
+                    Сделка № {{ deal.id }}
+                </h1>
+
+                <p class="card-text">
+                    <strong>Тема:</strong>
+                    {{ deal.title|default:"не указана" }}
+                </p>
+
+                <p class="card-text">
+                    <strong>Клиент:</strong> {{ deal.client_name }}
+                </p>
+
+                <p class="card-text">
+                    <strong>Менеджер:</strong> {{ deal.manager_name }}
+                    {% if manager_available %}
+                        <span class="badge bg-success">доступен</span>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">загружен</span>
+                    {% endif %}
+                </p>
+
+                {% if deal.contact_name %}
+                    <p class="card-text">
+                        <strong>Контакт:</strong> {{ deal.contact_name }}
+                    </p>
+                {% endif %}
+
+                <p class="card-text">
+                    <strong>Сумма:</strong> {{ deal.amount|floatformat:0 }}
+                </p>
+
+                <p class="card-text">
+                    <strong>Стадия:</strong>
+                    {% include "deals/includes/deal_status.html" %}
+                </p>
+            </div>
+        </div>
+    {% else %}
+        <h1 class="text-danger">Сделка не найдена</h1>
+        <p>Сделка с указанным идентификатором отсутствует.</p>
+    {% endif %}
+
+    <a href="{% url 'deals:list' %}" class="btn btn-outline-secondary mt-3">
+        &larr; к списку сделок
+    </a>
+{% endblock %}
