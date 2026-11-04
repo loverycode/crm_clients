@@ -1,24 +1,66 @@
 {% extends "base.html" %}
+{% block title %}Сделки - CRM{% endblock %}
 
-{% block title %}
-    Сделки - CRM
-{% endblock %}
 {% block content %}
     <h1>Сделки</h1>
-    <p>Всего сделок: {{ deals|length }}</p>
+
+    <!-- Фильтры -->
+    <form method="get" class="mb-4 row g-3">
+        <div class="col-md-3">
+            <select name="stage" class="form-select">
+                <option value="">Все стадии</option>
+                {% for s in stages %}
+                    <option value="{{ s }}" {% if stage == s %}selected{% endif %}>{{ s }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="client" class="form-select">
+                <option value="">Все клиенты</option>
+                {% for c in clients %}
+                    <option value="{{ c.id }}" {% if client_id|stringformat:"s" == c.id|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <select name="sort" class="form-select">
+                <option value="id" {% if sort == 'id' %}selected{% endif %}>По ID</option>
+                <option value="-amount" {% if sort == '-amount' %}selected{% endif %}>По сумме (убыв)</option>
+                <option value="amount" {% if sort == 'amount' %}selected{% endif %}>По сумме (возр)</option>
+            </select>
+        </div>
+        <div class="col-md-3">
+            <button type="submit" class="btn btn-primary w-100">Применить</button>
+        </div>
+    </form>
+
+    <p>Всего сделок: {{ page_obj.paginator.count }}</p>
+    
     <ul class="list-group">
         {% for deal in deals %}
             <li class="list-group-item d-flex justify-content-between">
                 <a href="{% url 'deals:detail' deal.id %}">
-                    {{ deal.title|default:"Сделка без темы" }}
-                    &mdash; {{ deal.client_name }}
+                    {{ deal.title|default:"Сделка без темы" }} &mdash; {{ deal.client.name }}
                 </a>
                 {% include "deals/includes/deal_status.html" %}
             </li>
         {% empty %}
-            <li class="list-group-item">
-                Сделки не найдены.
-            </li>
+            <li class="list-group-item">Сделки не найдены.</li>
         {% endfor %}
     </ul>
+
+    <!-- Пагинация -->
+    {% if page_obj.has_other_pages %}
+    <nav class="mt-4">
+        <ul class="pagination">
+            {% if page_obj.has_previous %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}&stage={{ stage }}&client={{ client_id }}&sort={{ sort }}">Назад</a></li>
+            {% endif %}
+            <li class="page-item disabled"><span class="page-link">{{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span></li>
+            {% if page_obj.has_next %}
+                <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}&stage={{ stage }}&client={{ client_id }}&sort={{ sort }}">Вперед</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    {% endif %}
 {% endblock %}

@@ -104,6 +104,7 @@ JOIN deals ON managers.id = deals.manager_id
 GROUP BY managers.id, managers.name
 HAVING COUNT(deals.id) > 1;
 
+SELECT DISTINCT stage FROM deals ORDER BY stage;
 
 SELECT
     managers.id,

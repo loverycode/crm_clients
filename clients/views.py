@@ -1,69 +1,48 @@
-from django.shortcuts import render
-
-from db.database import get_connection
+from django.shortcuts import render, get_object_or_404
+from django.db.models import Count, Q
+from django.core.paginator import Paginator
+from .models import Client, Manager
 
 
 def clients_list(request):
-    conn = get_connection()
-    try:
-        clients = conn.execute(
-            "SELECT id, name, status, created FROM clients ORDER BY name"
-        ).fetchall()
-    finally:
-        conn.close()
-    return render(request, "clients/client_list.html", {"clients": clients})
+    clients = Client.objects.all()
+
+    query = request.GET.get('q', '').strip()
+    if query:
+        clients = clients.filter(name__icontains=query)
+
+    status = request.GET.get('status', '').strip()
+    if status:
+        clients = clients.filter(status=status)
+
+    sort = request.GET.get('sort', 'name')
+    if sort in ['name', '-name', 'created', '-created']:
+        clients = clients.order_by(sort)
+
+    paginator = Paginator(clients, 5)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    context = {
+        'clients': page_obj,
+        'page_obj': page_obj,
+        'query': query,
+        'status': status,
+        'sort': sort
+    }
+    return render(request, "clients/client_list.html", context)
 
 
 def client_detail(request, client_id):
-    conn = get_connection()
-    try:
-        client = conn.execute(
-            "SELECT id, name, status, created FROM clients WHERE id = ?",
-            (client_id,),
-        ).fetchone()
+    client = get_object_or_404(
+        Client.objects.prefetch_related('contacts'), pk=client_id)
 
-        contacts = []
-        if client is not None:
-            contacts = conn.execute(
-                "SELECT id, name, phone, position "
-                "FROM contacts WHERE client_id = ? ORDER BY name",
-                (client_id,),
-            ).fetchall()
-    finally:
-        conn.close()
-
-    context = {"client": client, "contacts": contacts}
-    return render(
-        request,
-        "clients/client_detail.html",
-        context,
-        status=404 if client is None else 200,
-    )
+    context = {"client": client}
+    return render(request, "clients/client_detail.html", context)
 
 
 def managers_load(request):
-    conn = get_connection()
-    try:
-        managers = conn.execute(
-            """
-            SELECT
-                managers.id,
-                managers.name,
-                managers.email,
-                COUNT(deals.id) AS open_count
-            FROM managers
-            LEFT JOIN deals
-                ON managers.id = deals.manager_id
-                AND deals.stage = 'Открыта'
-            GROUP BY managers.id, managers.name, managers.email
-            HAVING COUNT(deals.id) < 5
-            ORDER BY open_count, managers.name
-            """
-        ).fetchall()
-    finally:
-        conn.close()
-    return render(
-        request,
-        "clients/managers_load.html",
-        {"managers": managers},
-    )
+    managers = Manager.objects.annotate(
+        open_count=Count('deals', filter=Q(deals__stage='Открыта'))
+    ).filter(open_count__lt=5).order_by('open_count', 'name')
+
+    return render(request, "clients/managers_load.html", {"managers": managers})

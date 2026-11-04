@@ -1,103 +1,78 @@
-from django.shortcuts import render
-
-from db.database import get_connection
-
-
-DEALS_QUERY = """
-    SELECT
-        deals.id,
-        deals.title,
-        deals.amount,
-        deals.stage,
-        deals.manager_id,
-        clients.name  AS client_name,
-        managers.name AS manager_name,
-        contacts.name AS contact_name
-    FROM deals
-    JOIN clients  ON deals.client_id  = clients.id
-    JOIN managers ON deals.manager_id = managers.id
-    LEFT JOIN contacts ON deals.contact_id = contacts.id
-"""
+from django.shortcuts import render, get_object_or_404
+from django.db.models import Count, Sum, Q, F
+from django.core.paginator import Paginator
+from .models import Deal
+from clients.models import Client, Manager
 
 
 def deals_list(request):
-    conn = get_connection()
-    try:
-        deals = conn.execute(
-            DEALS_QUERY + " ORDER BY deals.id"
-        ).fetchall()
-    finally:
-        conn.close()
-    return render(request, "deals/deal_list.html", {"deals": deals})
+    deals = Deal.objects.annotate(
+        client_name=F("client__name"),
+        manager_name=F("manager__name")
+    ).values(
+        "id", "title", "amount", "stage", "client_name", "manager_name"
+    )
+
+    stage = request.GET.get('stage', '').strip()
+    if stage:
+        deals = deals.filter(stage=stage)
+
+    client_id = request.GET.get('client', '').strip()
+    if client_id and client_id.isdigit():
+        deals = deals.filter(client_id=int(client_id))
+
+    sort = request.GET.get('sort', 'id')
+    if sort in ['id', '-id', 'amount', '-amount', 'stage']:
+        deals = deals.order_by(sort)
+
+    paginator = Paginator(deals, 5)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    context = {
+        'deals': page_obj,
+        'page_obj': page_obj,
+        'stage': stage,
+        'client_id': client_id,
+        'sort': sort,
+        'clients': Client.objects.all(),
+        'stages': Deal.objects.values_list('stage', flat=True).distinct()
+    }
+    return render(request, "deals/deal_list.html", context)
 
 
 def deal_detail(request, deal_id):
-    conn = get_connection()
-    try:
-        deal = conn.execute(
-            DEALS_QUERY + " WHERE deals.id = ?",
-            (deal_id,),
-        ).fetchone()
+    deal = get_object_or_404(
+        Deal.objects.select_related('client', 'manager', 'contact'),
+        pk=deal_id
+    )
 
-        manager_available = None
-        if deal is not None:
-            open_count = conn.execute(
-                "SELECT COUNT(*) FROM deals "
-                "WHERE manager_id = ? AND stage = 'Открыта'",
-                (deal["manager_id"],),
-            ).fetchone()[0]
-            manager_available = open_count < 5
-    finally:
-        conn.close()
+    open_count = deal.manager.deals.filter(stage='Открыта').count()
+    manager_available = open_count < 5
 
     context = {"deal": deal, "manager_available": manager_available}
-    return render(
-        request,
-        "deals/deal_detail.html",
-        context,
-        status=404 if deal is None else 200,
-    )
+    return render(request, "deals/deal_detail.html", context)
 
 
 def statistics(request):
-    conn = get_connection()
-    try:
-        by_client = conn.execute(
-            """
-            SELECT
-                clients.name      AS client_name,
-                COUNT(deals.id)   AS deals_count,
-                COALESCE(SUM(deals.amount), 0) AS total_amount
-            FROM clients
-            LEFT JOIN deals ON clients.id = deals.client_id
-            GROUP BY clients.id, clients.name
-            ORDER BY deals_count DESC, client_name
-            """
-        ).fetchall()
+    by_client = Client.objects.annotate(
+        deals_count=Count('deals'),
+        total_amount=Sum('deals__amount')
+    ).order_by('-deals_count', 'name')
 
-        by_manager = conn.execute(
-            """
-            SELECT
-                managers.name     AS manager_name,
-                COUNT(deals.id)   AS deals_count
-            FROM managers
-            LEFT JOIN deals ON managers.id = deals.manager_id
-            GROUP BY managers.id, managers.name
-            ORDER BY deals_count DESC, manager_name
-            """
-        ).fetchall()
+    by_manager = Manager.objects.annotate(
+        deals_count=Count('deals', filter=Q(deals__stage='Открыта')),
+        total_amount=Sum('deals__amount', filter=Q(deals__amount__gt=0))
+    ).order_by('-deals_count', 'name')
 
-        total = conn.execute(
-            "SELECT COUNT(*) AS cnt, COALESCE(SUM(amount), 0) AS total "
-            "FROM deals"
-        ).fetchone()
-    finally:
-        conn.close()
+    total_stats = Deal.objects.aggregate(
+        total_count=Count('id'),
+        total_amount=Sum('amount')
+    )
 
     context = {
         "by_client": by_client,
         "by_manager": by_manager,
-        "total_count": total["cnt"],
-        "total_amount": total["total"],
+        "total_count": total_stats['total_count'] or 0,
+        "total_amount": total_stats['total_amount'] or 0,
     }
     return render(request, "deals/statistics.html", context)

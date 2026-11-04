@@ -189,3 +189,22 @@ mypy models storage.py main.py utils.py
 - REST API;
 - контейнеризация (Docker);
 - CI/CD.
+
+## База данных (Django ORM)
+
+Начиная с ПР9 проект использует Django ORM для работы с базой данных SQLite.
+
+### Модели
+
+- `Client` — клиенты компании.
+- `Manager` — менеджеры.
+- `Contact` — контактные лица клиентов (связь `ForeignKey` с `Client`).
+- `Deal` — сделки (связи `ForeignKey` с `Client`, `Manager` и `Contact`).
+
+### Миграции и данные
+
+Для создания таблиц выполните:
+`python manage.py migrate`
+
+Для переноса данных из старой базы (ПР7) в новую используется скрипт:
+`python db/transfer_to_orm.py`
