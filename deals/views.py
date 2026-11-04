@@ -35,7 +35,7 @@ def deals_list(request):
         'client_id': client_id,
         'sort': sort,
         'clients': Client.objects.all(),
-        'stages': Deal.objects.values_list('stage', flat=True).distinct()
+        'stages': Deal.Stage.choices,
     }
     return render(request, "deals/deal_list.html", context)
 
@@ -46,7 +46,7 @@ def deal_detail(request, deal_id):
         pk=deal_id
     )
 
-    open_count = deal.manager.deals.filter(stage='Открыта').count()
+    open_count = deal.manager.deals.filter(stage=Deal.Stage.OPEN).count()
     manager_available = open_count < 5
 
     context = {"deal": deal, "manager_available": manager_available}
@@ -60,7 +60,7 @@ def statistics(request):
     ).order_by('-deals_count', 'name')
 
     by_manager = Manager.objects.annotate(
-        deals_count=Count('deals', filter=Q(deals__stage='Открыта')),
+        deals_count=Count('deals', filter=Q(deals__stage=Deal.Stage.OPEN)),
         total_amount=Sum('deals__amount', filter=Q(deals__amount__gt=0))
     ).order_by('-deals_count', 'name')
 

@@ -4,13 +4,12 @@
 {% block content %}
     <h1>Сделки</h1>
 
-    <!-- Фильтры -->
     <form method="get" class="mb-4 row g-3">
         <div class="col-md-3">
             <select name="stage" class="form-select">
                 <option value="">Все стадии</option>
-                {% for s in stages %}
-                    <option value="{{ s }}" {% if stage == s %}selected{% endif %}>{{ s }}</option>
+                {% for code, name in stages %}
+                    <option value="{{ code }}" {% if stage == code %}selected{% endif %}>{{ name }}</option>
                 {% endfor %}
             </select>
         </div>
@@ -40,7 +39,7 @@
         {% for deal in deals %}
             <li class="list-group-item d-flex justify-content-between">
                 <a href="{% url 'deals:detail' deal.id %}">
-                    {{ deal.title|default:"Сделка без темы" }} &mdash; {{ deal.client.name }}
+                    {{ deal.title|default:"Сделка без темы" }} &mdash; {{ deal.client_name }}
                 </a>
                 {% include "deals/includes/deal_status.html" %}
             </li>
@@ -49,7 +48,6 @@
         {% endfor %}
     </ul>
 
-    <!-- Пагинация -->
     {% if page_obj.has_other_pages %}
     <nav class="mt-4">
         <ul class="pagination">

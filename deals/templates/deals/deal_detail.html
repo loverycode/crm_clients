@@ -22,11 +22,11 @@
                 </p>
 
                 <p class="card-text">
-                    <strong>Клиент:</strong> {{ deal.client_name }}
+                    <strong>Клиент:</strong> {{ deal.client.name }}
                 </p>
 
                 <p class="card-text">
-                    <strong>Менеджер:</strong> {{ deal.manager_name }}
+                    <strong>Менеджер:</strong> {{ deal.manager.name }}
                     {% if manager_available %}
                         <span class="badge bg-success">доступен</span>
                     {% else %}
@@ -34,9 +34,9 @@
                     {% endif %}
                 </p>
 
-                {% if deal.contact_name %}
+                {% if deal.contact %}
                     <p class="card-text">
-                        <strong>Контакт:</strong> {{ deal.contact_name }}
+                        <strong>Контакт:</strong> {{ deal.contact.name }}
                     </p>
                 {% endif %}
 
@@ -46,6 +46,7 @@
 
                 <p class="card-text">
                     <strong>Стадия:</strong>
+                    <!-- Используем get_stage_display для красивого текста (из TextChoices) -->
                     {% include "deals/includes/deal_status.html" %}
                 </p>
             </div>

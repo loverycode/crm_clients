@@ -14,6 +14,9 @@
             <div class="card-body">
                 <h1 class="card-title">
                     {{ client.name }}
+                    {% if client.is_vip %}
+                        <span class="badge bg-warning text-dark ms-2">VIP</span>
+                    {% endif %}
                 </h1>
 
                 <p class="card-text">
@@ -30,7 +33,8 @@
 
                 <h2 class="h5 mt-4">Контакты</h2>
                 <ul class="list-group">
-                    {% for contact in contacts %}
+                    <!-- Обращаемся к контактам через обратную связь client.contacts.all() -->
+                    {% for contact in client.contacts.all %}
                         <li class="list-group-item">
                             {{ contact.name }}{% if contact.position %}, {{ contact.position }}{% endif %}
                             &mdash; {{ contact.phone }}
@@ -38,6 +42,28 @@
                     {% empty %}
                         <li class="list-group-item text-muted">
                             Контактов пока нет.
+                        </li>
+                    {% endfor %}
+                </ul>
+                <h2 class="h5 mt-4">Сделки клиента</h2>
+                <ul class="list-group">
+                    <!-- Используем обратную связь через related_name='deals' -->
+                    {% for deal in client.deals.all %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <div>
+                                <a href="{% url 'deals:detail' deal.id %}">
+                                    {{ deal.title|default:"Сделка без темы" }}
+                                </a>
+                                <br>
+                                <small class="text-muted">
+                                    Сумма: {{ deal.amount|floatformat:0 }} ₽ | Менеджер: {{ deal.manager.name }}
+                                </small>
+                            </div>
+                            {% include "deals/includes/deal_status.html" %}
+                        </li>
+                    {% empty %}
+                        <li class="list-group-item text-muted">
+                            Сделок пока нет.
                         </li>
                     {% endfor %}
                 </ul>

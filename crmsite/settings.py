@@ -25,7 +25,7 @@ SECRET_KEY = (
 )
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
 
@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'homepage',
     'clients',
     'deals',
+    'debug_toolbar',
 ]
 
 MIDDLEWARE = [
@@ -52,8 +53,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'debug_toolbar.middleware.DebugToolbarMiddleware',
 ]
-
+INTERNAL_IPS = ['127.0.0.1']
 ROOT_URLCONF = 'crmsite.urls'
 
 TEMPLATES = [
@@ -66,6 +68,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'clients.context_processors.crm_context',
             ],
         },
     },

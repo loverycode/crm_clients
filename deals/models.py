@@ -3,6 +3,12 @@ from clients.models import Client, Manager, Contact
 
 
 class Deal(models.Model):
+    class Stage(models.TextChoices):
+        OPEN = 'Открыта', 'Открыта'
+        WON = 'Выиграна', 'Выиграна'
+        LOST = 'Проиграна', 'Проиграна'
+        CANCELLED = 'Отменена', 'Отменена'
+
     client = models.ForeignKey(
         Client, on_delete=models.CASCADE, related_name='deals', verbose_name="Клиент"
     )
@@ -15,7 +21,11 @@ class Deal(models.Model):
     amount = models.FloatField(verbose_name="Сумма")
     title = models.CharField(max_length=250, blank=True, verbose_name="Тема")
     stage = models.CharField(
-        max_length=50, default="Открыта", verbose_name="Стадия")
+        max_length=50,
+        choices=Stage.choices,
+        default=Stage.OPEN,
+        verbose_name="Стадия"
+    )
 
     class Meta:
         verbose_name = "Сделка"

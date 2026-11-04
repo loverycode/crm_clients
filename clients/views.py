@@ -32,9 +32,10 @@ def clients_list(request):
     return render(request, "clients/client_list.html", context)
 
 
-def client_detail(request, client_id):
+def client_detail(request, slug):
+    # Ищем клиента по slug и сразу подтягиваем связанные контакты (prefetch_related)
     client = get_object_or_404(
-        Client.objects.prefetch_related('contacts'), pk=client_id)
+        Client.objects.prefetch_related('contacts'), slug=slug)
 
     context = {"client": client}
     return render(request, "clients/client_detail.html", context)

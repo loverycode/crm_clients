@@ -1,13 +1,57 @@
 from django.db import models
+from django.urls import reverse
+from pytils.translit import slugify
 from datetime import date
 
 
 class Client(models.Model):
+    class Status(models.TextChoices):
+        NEW = 'Новый', 'Новый'
+        IN_PROGRESS = 'В работе', 'В работе'
+        CLOSED = 'Закрыт', 'Закрыт'
+        REJECTED = 'Отказ', 'Отказ'
+
     name = models.CharField(max_length=256, verbose_name="Название")
     status = models.CharField(
-        max_length=50, default="Новый", verbose_name="Статус")
+        max_length=50,
+        choices=Status.choices,
+        default=Status.NEW,
+        verbose_name="Статус"
+    )
     created = models.DateField(
         default=date.today, verbose_name="Дата создания")
+    slug = models.SlugField(
+        max_length=255,
+        unique=True,
+        blank=True,
+        editable=False,
+        verbose_name="URL-идентификатор"
+    )
+    is_vip = models.BooleanField(
+        default=False,
+        verbose_name="VIP-клиент"
+    )
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            base_slug = slugify(self.name) or "client"
+            self.slug = f"{base_slug}-{self.pk or 'new'}"
+
+        super().save(*args, **kwargs)
+
+        if self.slug.endswith('-new'):
+            self.slug = self.slug.replace('-new', f'-{self.pk}')
+            super().save(update_fields=['slug'])
+
+        if self.pk:
+            from deals.models import Deal  # Импорт внутри, чтобы избежать циклов
+            has_won_deal = self.deals.filter(stage=Deal.Stage.WON).exists()
+            if self.is_vip != has_won_deal:
+                self.is_vip = has_won_deal
+                super().save(update_fields=['is_vip'])
+
+    def get_absolute_url(self):
+        return reverse("clients:detail", kwargs={"slug": self.slug})
 
     class Meta:
         verbose_name = "Клиент"

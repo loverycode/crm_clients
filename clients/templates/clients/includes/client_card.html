@@ -8,11 +8,6 @@
             Статус: {{ client.status }}
         </p>
 
-        <a
-            href="{% url 'clients:detail' client.id %}"
-            class="btn btn-primary"
-        >
-            Подробнее
-        </a>
+       <a href="{{ client.get_absolute_url }}" class="btn btn-primary">Подробнее</a>
     </div>
 </article>
